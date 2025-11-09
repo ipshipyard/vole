@@ -12,6 +12,7 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/ipfs/go-cid"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
 	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
@@ -235,6 +236,56 @@ func main() {
 						},
 					},
 					{
+						Name:        "findpeer",
+						ArgsUsage:   "<peer-id> <optional-bootstrapper-multiaddr>",
+						Usage:       "findpeer resolves the multiaddrs for a peer ID",
+						Description: "creates a libp2p peer and sends DHT get closest peers requests until the peer is found. An optional bootstrapper can be provided, otherwise it falls back to the default bootstrappers",
+						Action: func(c *cli.Context) error {
+							if c.NArg() == 0 || c.NArg() > 2 {
+								return fmt.Errorf("invalid number of arguments")
+							}
+
+							peerIDStr := c.Args().Get(0)
+							bootstrappers := make([]peer.AddrInfo, 0)
+
+							if c.NArg() == 2 {
+								maStr := c.Args().Get(1)
+
+								ma, err := multiaddr.NewMultiaddr(maStr)
+								if err != nil {
+									return err
+								}
+
+								bootstrapper, err := peer.AddrInfoFromP2pAddr(ma)
+								if err != nil {
+									return fmt.Errorf("failed to parse bootstrapper multiaddr: %w", err)
+								}
+
+								bootstrappers = append(bootstrappers, *bootstrapper)
+
+							} else {
+								bootstrappers = dht.GetDefaultBootstrapPeerAddrInfos()
+							}
+
+							peerID, err := peer.Decode(peerIDStr)
+							if err != nil {
+								return err
+							}
+
+							ais, err := vole.DhtFindPeer(c.Context, peerID, bootstrappers)
+							if err != nil {
+								return err
+							}
+
+							for _, a := range ais.Addrs {
+								fmt.Println(a)
+							}
+
+							return nil
+						},
+						Flags: []cli.Flag{},
+					},
+					{
 						Name:        "ping",
 						ArgsUsage:   "<multiaddr>",
 						Usage:       "ping a DHT node",
@@ -345,7 +396,6 @@ Note: may not work with some transports such as p2p-circuit (not applicable) and
 						Name:      "ping",
 						ArgsUsage: "<multiaddr>",
 						Flags: []cli.Flag{
-
 							&cli.BoolFlag{
 								Name:        "force-relay",
 								Usage:       `Ping the peer over a relay instead of a direct connection`,
@@ -440,6 +490,7 @@ var bitswapGetCmd = &cli.Command{
 		return vole.GetBitswapCID(root, ai)
 	},
 }
+
 var bitswapCheckCmd = &cli.Command{
 	Name:        "check",
 	ArgsUsage:   "<cid> <multiaddr>",

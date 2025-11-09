@@ -2,8 +2,11 @@ package vole
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/libp2p/go-libp2p"
+	dht "github.com/libp2p/go-libp2p-kad-dht"
 	"github.com/libp2p/go-libp2p/core/host"
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -105,6 +108,53 @@ func DhtGetClosestPeers(ctx context.Context, key []byte, proto protocol.ID, ma m
 	}
 
 	return ais, nil
+}
+
+func DhtFindPeer(ctx context.Context, peerToFind peer.ID, bootstrappers []peer.AddrInfo) (*peer.AddrInfo, error) {
+	h, err := libp2p.New(libp2p.NoListenAddrs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create host: %w", err)
+	}
+	defer h.Close()
+
+	dhtOpts := []dht.Option{
+		dht.Mode(dht.ModeClient),
+		dht.BootstrapPeers(bootstrappers...),
+	}
+
+	kademliaDHT, err := dht.New(ctx, h, dhtOpts...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create dht client: %w", err)
+	}
+	defer kademliaDHT.Close()
+
+	if err = kademliaDHT.Bootstrap(ctx); err != nil {
+		return nil, fmt.Errorf("bootstrap failed: %w", err)
+	}
+
+	deadline := time.NewTimer(5 * time.Second)
+	defer deadline.Stop()
+
+	ticker := time.NewTicker(100 * time.Millisecond)
+	defer ticker.Stop()
+
+	for kademliaDHT.RoutingTable().Size() < 10 {
+		select {
+		case <-deadline.C:
+			return nil, fmt.Errorf("routing table warmup timed out (size=%d)", kademliaDHT.RoutingTable().Size())
+		case <-ctx.Done():
+			return nil, fmt.Errorf("routing table warmup canceled: %w (size=%d)", ctx.Err(), kademliaDHT.RoutingTable().Size())
+		case <-ticker.C:
+			// keep polling
+		}
+	}
+
+	peerInfo, err := kademliaDHT.FindPeer(ctx, peerToFind)
+	if err != nil {
+		return nil, fmt.Errorf("FindPeer failed: %w", err)
+	}
+
+	return &peerInfo, nil
 }
 
 func DhtPing(ctx context.Context, proto protocol.ID, ma multiaddr.Multiaddr) error {
