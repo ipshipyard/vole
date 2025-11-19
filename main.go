@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"os"
 
 	madns "github.com/multiformats/go-multiaddr-dns"
@@ -12,16 +13,24 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/ipfs/go-cid"
+	golog "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"github.com/libp2p/go-libp2p/core/protocol"
-	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
+	"github.com/libp2p/go-libp2p/gologshim"
+	"github.com/libp2p/go-libp2p/p2p/host/observedaddrs"
 	"github.com/multiformats/go-multiaddr"
 	"github.com/multiformats/go-multibase"
 )
 
 func init() {
+	// Bridge slog-based libraries (like go-libp2p >= 0.45) back into go-log.
+	// This ensures go-libp2p logs are visible and can be adjusted at runtime.
+	// See: https://github.com/ipfs/go-log/releases/tag/v2.9.0
+	slog.SetDefault(slog.New(golog.SlogHandler()))
+	gologshim.SetDefaultHandler(golog.SlogHandler())
+
 	// Lets us discover our own public address with a single observation
-	identify.ActivationThresh = 1
+	observedaddrs.ActivationThresh = 1
 }
 
 func main() {

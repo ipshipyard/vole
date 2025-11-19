@@ -9,7 +9,7 @@ import (
 
 	"github.com/libp2p/go-libp2p/core/network"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"github.com/libp2p/go-libp2p/p2p/protocol/identify"
+	"github.com/libp2p/go-libp2p/p2p/host/observedaddrs"
 	"github.com/multiformats/go-multiaddr"
 )
 
@@ -17,7 +17,7 @@ func Ping(ctx context.Context, forceRelay bool, p *peer.AddrInfo) error {
 	if forceRelay {
 		// We don't want a direct connection, so set this to a high value so
 		// that we don't learn our public address
-		identify.ActivationThresh = 100
+		observedaddrs.ActivationThresh = 100
 
 		for _, addr := range p.Addrs {
 			if _, err := addr.ValueForProtocol(multiaddr.P_CIRCUIT); err != nil {
