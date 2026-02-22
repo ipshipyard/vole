@@ -1,6 +1,6 @@
 module github.com/ipshipyard/vole
 
-go 1.24.6
+go 1.25
 
 require (
 	github.com/cheggaaa/pb/v3 v3.1.7
