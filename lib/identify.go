@@ -45,7 +45,7 @@ func IdentifyRequest(ctx context.Context, maStr string, allowUnknownPeer bool) (
 		}
 	}
 
-	h, err := libp2pHost()
+	h, err := libp2pHost(ctx)
 	if err != nil {
 		return nil, err
 	}
