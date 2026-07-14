@@ -3,6 +3,7 @@ package vole
 import (
 	"context"
 	"errors"
+	"slices"
 	"sort"
 
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -100,7 +101,7 @@ func extractIdentifyInfo(ps peerstore.Peerstore, p peer.ID) (*IdentifyInfo, erro
 		return nil, err
 	}
 	info.Protocols = append(info.Protocols, protocols...)
-	sort.Slice(info.Protocols, func(i, j int) bool { return info.Protocols[i] < info.Protocols[j] })
+	slices.Sort(info.Protocols)
 
 	if v, err := ps.Get(p, "ProtocolVersion"); err == nil {
 		if vs, ok := v.(string); ok {

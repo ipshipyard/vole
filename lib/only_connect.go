@@ -32,7 +32,7 @@ func OnlyConnect(ctx context.Context, p *peer.AddrInfo) error {
 	resCh := pingService.Ping(ctx, p.ID)
 	var avg time.Duration
 	trials := 3
-	for i := 0; i < trials; i++ {
+	for range trials {
 		res := <-resCh
 		if res.Error != nil {
 			return res.Error

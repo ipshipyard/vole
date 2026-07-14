@@ -18,8 +18,7 @@ import (
 )
 
 func TestIdentifyRequest(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	const testProtoVersion = "test_protocol_version/0.0.1"
 	const testAgent = "test_agent/0.0.1"

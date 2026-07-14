@@ -2,7 +2,6 @@ package vole
 
 import (
 	"bytes"
-	"context"
 	"testing"
 
 	"github.com/libp2p/go-libp2p"
@@ -13,8 +12,7 @@ import (
 )
 
 func TestDhtPutGet(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	h, err := libp2p.New()
 	if err != nil {

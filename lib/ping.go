@@ -47,7 +47,7 @@ func Ping(ctx context.Context, forceRelay bool, p *peer.AddrInfo) error {
 		return err
 	}
 
-	for i := 0; i < times; i++ {
+	for range times {
 		_, err := rand.Reader.Read(in[:])
 		if err != nil {
 			return err
