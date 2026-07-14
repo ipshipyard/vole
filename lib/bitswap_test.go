@@ -1,7 +1,6 @@
 package vole
 
 import (
-	"context"
 	"encoding/json"
 	"testing"
 
@@ -19,8 +18,7 @@ import (
 )
 
 func TestBitswapCheckPresent(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	h, err := libp2p.New()
 	if err != nil {
@@ -59,8 +57,7 @@ func TestBitswapCheckPresent(t *testing.T) {
 }
 
 func TestBitswapCheckNotPresent(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	h, err := libp2p.New()
 	if err != nil {
